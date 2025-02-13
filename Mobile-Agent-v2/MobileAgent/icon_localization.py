@@ -2,14 +2,15 @@ from MobileAgent.crop import calculate_size, calculate_iou
 from PIL import Image
 import torch
 
+
 def remove_boxes(boxes_filt, size, iou_threshold=0.5):
     boxes_to_remove = set()
 
     for i in range(len(boxes_filt)):
-        if calculate_size(boxes_filt[i]) > 0.05*size[0]*size[1]:
+        if calculate_size(boxes_filt[i]) > 0.05 * size[0] * size[1]:
             boxes_to_remove.add(i)
         for j in range(len(boxes_filt)):
-            if calculate_size(boxes_filt[j]) > 0.05*size[0]*size[1]:
+            if calculate_size(boxes_filt[j]) > 0.05 * size[0] * size[1]:
                 boxes_to_remove.add(j)
             if i == j:
                 continue
@@ -20,28 +21,32 @@ def remove_boxes(boxes_filt, size, iou_threshold=0.5):
                 boxes_to_remove.add(j)
 
     boxes_filt = [box for idx, box in enumerate(boxes_filt) if idx not in boxes_to_remove]
-    
+
     return boxes_filt
 
 
 def det(input_image_path, caption, groundingdino_model, box_threshold=0.05, text_threshold=0.5):
+    """
+    Icon检测
+    用于图像中的Icon检测，通过groundingdino_model模型识别图像中与给定文本描述相关的区域，并返回这些区域的坐标。
+    """
     image = Image.open(input_image_path)
     size = image.size
 
     caption = caption.lower()
     caption = caption.strip()
-    if not caption.endswith('.'):
-        caption = caption + '.'
-    
+    if not caption.endswith("."):
+        caption = caption + "."
+
     inputs = {
-        'IMAGE_PATH': input_image_path,
-        'TEXT_PROMPT': caption,
-        'BOX_TRESHOLD': box_threshold,
-        'TEXT_TRESHOLD': text_threshold
+        "IMAGE_PATH": input_image_path,
+        "TEXT_PROMPT": caption,
+        "BOX_TRESHOLD": box_threshold,
+        "TEXT_TRESHOLD": text_threshold,
     }
 
     result = groundingdino_model(inputs)
-    boxes_filt = result['boxes']
+    boxes_filt = result["boxes"]
 
     H, W = size[1], size[0]
     for i in range(boxes_filt.size(0)):
